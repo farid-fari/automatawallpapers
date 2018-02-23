@@ -53,9 +53,8 @@ let rec main = fun colors neighborhood code ->
     curcode := !curcode / colors
   done;
   for j = 0 to sx - 1 do
-    initial.(j) <- 0(*Random.int colors*)
+    initial.(j) <- Random.int colors
   done;
-  initial.(sx-1)<-1;
   generate_automato colors neighborhood rule initial 0;
   clear_graph ();
   main colors neighborhood code;;

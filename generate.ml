@@ -7,6 +7,9 @@ let rec pow = fun i j -> match j with
     | 0 -> 1
     | j -> let a = pow i (j/2) in a*a*(if j mod 2 = 1 then i else 1);;
 
+(* Maximum number of threads. *)
+let chunk_size = int_of_string Sys.argv.(4);;
+
 (* Initiliazing graphics. *)
 let size = " " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "+30-50";;
 open_graph size;;
@@ -24,10 +27,18 @@ let color_conv = fun t -> match t with
     | 6 -> rgb 0 0 255
     | _ -> rgb 0 0 0;;
 
-(* Recursive loop that draws a color array to a line of the screen. *)
-let rec drawline = fun line n i -> match i with
-  | i when i >= sx -> ()
-  | i -> set_color (color_conv line.(i)); plot i n; drawline line n (i+1);;
+(* Calculates and draws a chunk of pixels from the previous line. *)
+let rec drawpixel = fun colors rules previous neighborhood newline m n (i,j) ->
+    for k = i to j-1 do
+        let r = ref 0 in
+        for l = -neighborhood to neighborhood do
+	    r := colors * !r + (if k+l < sx && k+l >= 0 then previous.(k+l) else 0)
+        done;
+        newline.(k) <- rules.(!r);
+	Mutex.lock m;
+        set_color (color_conv (rules.(!r))); plot k n;
+	Mutex.unlock m;
+    done;;
 
 (* Generates a new line from the previous one, then launches draw loop. *)
 let rec generate_automato = fun code colors neighborhood rules previous line ->
@@ -41,15 +52,14 @@ let rec generate_automato = fun code colors neighborhood rules previous line ->
         | _ -> generate_automato code colors neighborhood rules previous line (* pretend nothing happened *)
       )
     else begin
-        let newline = Array.make sx 0 in
-        for j = 0 to sx - 1 do
-            let r = ref 0 in
-            for k = -neighborhood to neighborhood do
-                r := colors * !r + (if j+k < sx && j+k >= 0 then previous.(j+k) else 0)
-            done;
-            newline.(j) <- rules.(!r)
+	let m = Mutex.create ()
+        and newline = Array.make sx 0 in
+	let f = drawpixel colors rules previous neighborhood newline m line in
+        for j = 0 to sx/chunk_size do
+		let t = Thread.create f (j*chunk_size, min sx ((j+1)*chunk_size)) in ();
         done;
-        drawline newline line 0;
+	Mutex.lock m;
+	Mutex.unlock m;
         generate_automato code colors neighborhood rules newline (line+1)
     end
 and
@@ -83,6 +93,6 @@ and randomRule = fun colors neighborhood ->
         initial.(j) <- Random.int colors
     done;
     clear_graph ();
-    print_endline ("Format: " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "; Regle aleatoire");
+    print_endline ("Format: " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "; Random rule");
     generate_automato 0 colors neighborhood rule initial 0
 in main 2 1 (int_of_string Sys.argv.(3));;

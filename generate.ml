@@ -16,32 +16,60 @@ open_graph size;;
 
 let sx = size_x () and sy = size_y ();;
 
-(* Use this to configure the color palette. *)
-let color_conv = fun t -> match t with
+(* Use this to configure the color palettes.
+These are configures for four colors (plus placeholder color).
+Feel free to add or remove some. *)
+let palettes = [| (fun t -> match t with
     | 0 -> rgb 247 240 82
     | 1 -> rgb 242 129 35
     | 2 -> rgb 211 78 36
     | 3 -> rgb 86 63 27
-    | 4 -> rgb 56 114 108
-    | 5 -> rgb 0 255 0
-    | 6 -> rgb 0 0 255
-    | _ -> rgb 0 0 0;;
+    | _ -> rgb 0 0 0);
+(fun t -> match t with
+| 0 -> rgb 247 255 252
+| 1 -> rgb 227 253 226
+| 2 -> rgb 197 241 213
+| 3 -> rgb 162 186 164
+| _ -> rgb 0 0 0);
+(fun t -> match t with
+| 0 -> rgb 198 249 31
+| 1 -> rgb 20 17 21
+| 2 -> rgb 76 43 54
+| 3 -> rgb 141 99 70
+| _ -> rgb 0 0 0);
+(fun t -> match t with
+| 0 -> rgb 238 243 106
+| 1 -> rgb 63 48 71
+| 2 -> rgb 81 113 165
+| 3 -> rgb 155 201 149
+| _ -> rgb 0 0 0);
+ (fun t -> match t with
+| 0 -> rgb 75 144 168
+| 1 -> rgb 74 185 211
+| 2 -> rgb 230 89 88
+| 3 -> rgb 244 215 75
+| _ -> rgb 0 0 0);
+(fun t -> match t with
+| 0 -> rgb 110 37 148
+| 1 -> rgb 236 212 68
+| 2 -> rgb 0 0 0
+| 3 -> rgb 255 255 255
+| _ -> rgb 0 0 0); |];;
+
 
 (* Calculates and draws a chunk of pixels from the previous line. *)
-let rec drawpixel = fun colors rules previous neighborhood newline m n (i,j) ->
+let rec drawchunk = fun palette colors rules previous neighborhood newline n (i,j) ->
     for k = i to j-1 do
         let r = ref 0 in
         for l = -neighborhood to neighborhood do
-	    r := colors * !r + (if k+l < sx && k+l >= 0 then previous.(k+l) else 0)
+        r := colors * !r + (if k+l < sx && k+l >= 0 then previous.(k+l) else 0)
         done;
         newline.(k) <- rules.(!r);
-	Mutex.lock m;
-        set_color (color_conv (rules.(!r))); plot k n;
-	Mutex.unlock m;
+    set_color (palettes.(palette) rules.(!r)); plot k n;
     done;;
 
 (* Generates a new line from the previous one, then launches draw loop. *)
-let rec generate_automato = fun code colors neighborhood rules previous line ->
+let rec generate_automato = fun code palette colors neighborhood rules previous line ->
     if line = sy || key_pressed () then let s = wait_next_event [Key_pressed] in
       (match s.key with
         | '+' -> main colors neighborhood (max 0 (code+1))
@@ -49,18 +77,17 @@ let rec generate_automato = fun code colors neighborhood rules previous line ->
         | 'r' -> randomRule colors neighborhood
         | ' ' -> main colors neighborhood code
         | 'q' -> exit 0
-        | _ -> generate_automato code colors neighborhood rules previous line (* pretend nothing happened *)
+        | _ -> generate_automato code palette colors neighborhood rules previous line (* pretend nothing happened *)
       )
     else begin
-	let m = Mutex.create ()
-        and newline = Array.make sx 0 in
-	let f = drawpixel colors rules previous neighborhood newline m line in
-        for j = 0 to sx/chunk_size do
-		let t = Thread.create f (j*chunk_size, min sx ((j+1)*chunk_size)) in ();
-        done;
-	Mutex.lock m;
-	Mutex.unlock m;
-        generate_automato code colors neighborhood rules newline (line+1)
+    let newline = Array.make sx 0
+    and linethreads = ref [] in
+    let f = drawchunk palette colors rules previous neighborhood newline line in
+    for j = 0 to sx/chunk_size do
+        let t = Thread.create f (j*chunk_size, min sx ((j+1)*chunk_size)) in linethreads := t::!linethreads;
+    done;
+    List.iter Thread.join !linethreads;
+    generate_automato code palette colors neighborhood rules newline (line+1)
     end
 and
 (* Takes the number of colors to be used as well as the radius of neighborhoods
@@ -79,8 +106,9 @@ main = fun colors neighborhood code ->
         initial.(j) <- Random.int colors
     done;
     clear_graph ();
-    print_endline ("Format: " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "; Code: " ^ (string_of_int code));
-    generate_automato code colors neighborhood rule initial 0
+    let palette = Random.int (Array.length palettes) in
+    print_endline ("Format: " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "; Code: " ^ (string_of_int code) ^ "; Palette: " ^ (string_of_int palette));
+    generate_automato code palette colors neighborhood rule initial 0
 (* Same but with random rules (and NOT a random code). *)
 and randomRule = fun colors neighborhood ->
     let initial = Array.make sx 0 and
@@ -93,6 +121,8 @@ and randomRule = fun colors neighborhood ->
         initial.(j) <- Random.int colors
     done;
     clear_graph ();
-    print_endline ("Format: " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "; Random rule");
-    generate_automato 0 colors neighborhood rule initial 0
-in main 2 1 (int_of_string Sys.argv.(3));;
+    let palette = Random.int (Array.length palettes) in
+    print_endline ("Format: " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "; Random rule; Palette: " ^ (string_of_int palette));
+    generate_automato 0 palette colors neighborhood rule initial 0
+in main 4 1 (int_of_string Sys.argv.(3));;
+

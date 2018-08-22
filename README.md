@@ -7,20 +7,22 @@ Use the [Wolfram atlas](http://atlas.wolfram.com/01/01/) to find interesting Wol
 ## Examples
 
 ![example1](examples/one.png?raw=true)
+
 ![example2](examples/two.png?raw=true)
+
 ![example3](examples/three.png?raw=true)
+
 ![example4](examples/four.png?raw=true)
+
 ![example5](examples/five.png?raw=true)
 
 ## Usage
 
-    ./generate.out 1920 1080 110 120
+    ./generate.out 1920 1080 110
 
 The first two integers are the frame width then height of the image to generate.
 
 The third integer is the Wolfram Code for the automata.
-
-The fourth integer is the size of chunks assigned to separate threads (try to hit `size_x/number_of_cores`).
 
 The initial line is random, and the color palette is chosen randomly at each draw.
 
@@ -36,3 +38,15 @@ Several settings can be altered in `generate.ml` in order to change the way the 
 | `q` | Exit |
 
 The other keys have no effect.
+
+## Building
+
+The file `generate.out` is a binary compiled for linux and OSX using architecture `x64`.
+
+The `Makefile` defines a rule for that executable but requires `ocamlopt` with `Flambda` optimizations to be installed and switched on in `opam`.
+You can do the same without `Flambda` with the following command (or similar):
+
+    ocamlopt -o generate.out graphics.cmxa generate.ml
+
+You can also use `ocamlc` by replacing `graphics.cmxa` by `graphics.cma`.
+

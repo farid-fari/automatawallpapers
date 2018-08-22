@@ -31,6 +31,7 @@ Several settings can be altered in `generate.ml` in order to change the way the 
 | `+` | Increase code by `1` and regenerate |
 | `-` | Decrease code by `1` and regenerate |
 | `r` | Regenerate with a random rule |
+| `p` | Change color palettes randomly mid-draw |
 | `space` | Regenerate with a new initial line |
 | `q` | Exit |
 

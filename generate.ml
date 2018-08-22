@@ -7,9 +7,6 @@ let rec pow = fun i j -> match j with
     | 0 -> 1
     | j -> let a = pow i (j/2) in a*a*(if j mod 2 = 1 then i else 1);;
 
-(* Maximum number of threads. *)
-let chunk_size = int_of_string Sys.argv.(4);;
-
 (* Initiliazing graphics. *)
 let size = " " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "+30-50";;
 open_graph size;;
@@ -57,16 +54,10 @@ let palettes = [| (fun t -> match t with
 | _ -> rgb 0 0 0); |];;
 
 
-(* Calculates and draws a chunk of pixels from the previous line. *)
-let rec drawchunk = fun palette colors rules previous neighborhood newline n (i,j) ->
-    for k = i to j-1 do
-        let r = ref 0 in
-        for l = -neighborhood to neighborhood do
-        r := colors * !r + (if k+l < sx && k+l >= 0 then previous.(k+l) else 0)
-        done;
-        newline.(k) <- rules.(!r);
-    set_color (palettes.(palette) rules.(!r)); plot k n;
-    done;;
+(* Calculates and draws a line of pixels from the previous line. *)
+let rec drawline = fun palette line n i -> match i with
+	| i when i >= sx -> () 
+	| i -> set_color (palettes.(palette) line.(i)); plot i n; drawline palette line n (i+1);;
 
 (* Generates a new line from the previous one, then launches draw loop. *)
 let rec generate_automato = fun code palette colors neighborhood rules previous line ->
@@ -76,17 +67,20 @@ let rec generate_automato = fun code palette colors neighborhood rules previous 
         | '-' -> main colors neighborhood (max 0 (code-1))
         | 'r' -> randomRule colors neighborhood
         | ' ' -> main colors neighborhood code
+        | 'p' -> generate_automato code (Random.int (Array.length palettes)) colors neighborhood rules previous line
         | 'q' -> exit 0
         | _ -> generate_automato code palette colors neighborhood rules previous line (* pretend nothing happened *)
       )
     else begin
-    let newline = Array.make sx 0
-    and linethreads = ref [] in
-    let f = drawchunk palette colors rules previous neighborhood newline line in
-    for j = 0 to sx/chunk_size do
-        let t = Thread.create f (j*chunk_size, min sx ((j+1)*chunk_size)) in linethreads := t::!linethreads;
+    let newline = Array.make sx 0 in
+    for j = 0 to sx - 1 do
+	let r = ref 0 in
+	for k = -neighborhood to neighborhood do
+		r := colors * !r + (if j+k < sx && j+k >= 0 then previous.(j+k) else 0)
+	done;
+	newline.(j) <- rules.(!r)
     done;
-    List.iter Thread.join !linethreads;
+    drawline palette newline line 0;
     generate_automato code palette colors neighborhood rules newline (line+1)
     end
 and

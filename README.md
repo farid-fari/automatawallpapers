@@ -6,26 +6,31 @@ Use the [Wolfram atlas](http://atlas.wolfram.com/01/01/) to find interesting Wol
 
 ## Examples
 
-![example](examples/three.png?raw=true)
-
-![example](examples/four.png?raw=true)
+![example1](examples/one.png?raw=true)
+![example2](examples/two.png?raw=true)
+![example3](examples/three.png?raw=true)
+![example4](examples/four.png?raw=true)
+![example5](examples/five.png?raw=true)
 
 ## Usage
 
-    ./generate.out 1920 1080 110
+    ./generate.out 1920 1080 110 120
 
-The first two digits are the frame width then height of the image to generate.
+The first two integers are the frame width then height of the image to generate.
 
-The third digit is the Wolfram Code for the automata.
-The initial line is random.
+The third integer is the Wolfram Code for the automata.
 
-Several settings can be altered in `generate.ml` in order to change the way the code is processed, for instance the color palette.
+The fourth integer is the size of chunks assigned to separate threads (try to hit `size_x/number_of_cores`).
+
+The initial line is random, and the color palette is chosen randomly at each draw.
+
+Several settings can be altered in `generate.ml` in order to change the way the code is processed, the number of colors used and the size of the neighborhood considered.
 
 | Key | Action|
 | --- | --- |
 | `+` | Increase code by `1` and regenerate |
 | `-` | Decrease code by `1` and regenerate |
-| `r` | Regenerate with a random code (between 0 and 2³⁰) |
+| `r` | Regenerate with a random rule |
 | `space` | Regenerate with a new initial line |
 | `q` | Exit |
 

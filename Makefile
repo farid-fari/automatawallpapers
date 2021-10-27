@@ -2,7 +2,7 @@
 all: generate.exe
 
 generate.exe: generate.ml
-	ocamlfind ocamlopt -O3 -o $@ -package graphics -linkpkg $<
+	ocamlopt -O3 -o $@ graphics.cmxa $<
 
 clean:
 	rm -f generate.{cm{i,o,x},exe,o}

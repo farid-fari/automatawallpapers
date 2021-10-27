@@ -14,39 +14,39 @@ open_graph size;;
 let sx = size_x () and sy = size_y ();;
 
 (* Use this to configure the color palettes.
-These are configures for four colors (plus placeholder color).
+These are configured for four colors (plus placeholder color).
 Feel free to add or remove some. *)
-let palettes = [| (fun t -> match t with
+let palettes = [| (function
     | 0 -> rgb 247 240 82
     | 1 -> rgb 242 129 35
     | 2 -> rgb 211 78 36
     | 3 -> rgb 86 63 27
     | _ -> rgb 0 0 0);
-(fun t -> match t with
+(function
 | 0 -> rgb 247 255 252
 | 1 -> rgb 227 253 226
 | 2 -> rgb 197 241 213
 | 3 -> rgb 162 186 164
 | _ -> rgb 0 0 0);
-(fun t -> match t with
+(function
 | 0 -> rgb 198 249 31
 | 1 -> rgb 20 17 21
 | 2 -> rgb 76 43 54
 | 3 -> rgb 141 99 70
 | _ -> rgb 0 0 0);
-(fun t -> match t with
+(function
 | 0 -> rgb 238 243 106
 | 1 -> rgb 63 48 71
 | 2 -> rgb 81 113 165
 | 3 -> rgb 155 201 149
 | _ -> rgb 0 0 0);
- (fun t -> match t with
+ (function
 | 0 -> rgb 75 144 168
 | 1 -> rgb 74 185 211
 | 2 -> rgb 230 89 88
 | 3 -> rgb 244 215 75
 | _ -> rgb 0 0 0);
-(fun t -> match t with
+(function
 | 0 -> rgb 110 37 148
 | 1 -> rgb 236 212 68
 | 2 -> rgb 0 0 0
@@ -56,7 +56,7 @@ let palettes = [| (fun t -> match t with
 
 (* Calculates and draws a line of pixels from the previous line. *)
 let rec drawline = fun palette line n i -> match i with
-	| i when i >= sx -> () 
+	| i when i >= sx -> ()
 	| i -> set_color (palettes.(palette) line.(i)); plot i n; drawline palette line n (i+1);;
 
 (* Generates a new line from the previous one, then launches draw loop. *)
@@ -101,7 +101,7 @@ main = fun colors neighborhood code ->
     done;
     clear_graph ();
     let palette = Random.int (Array.length palettes) in
-    print_endline ("Format: " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "; Code: " ^ (string_of_int code) ^ "; Palette: " ^ (string_of_int palette));
+    Printf.printf "Format: %sx%s; code: %d; palette: %d\n%!" Sys.argv.(1) Sys.argv.(2) code palette;
     generate_automato code palette colors neighborhood rule initial 0
 (* Same but with random rules (and NOT a random code). *)
 and randomRule = fun colors neighborhood ->
@@ -116,7 +116,6 @@ and randomRule = fun colors neighborhood ->
     done;
     clear_graph ();
     let palette = Random.int (Array.length palettes) in
-    print_endline ("Format: " ^ Sys.argv.(1) ^ "x" ^ Sys.argv.(2) ^ "; Random rule; Palette: " ^ (string_of_int palette));
+    Printf.printf "Format: %sx%s; random rule; palette: %d\n%!" Sys.argv.(1) Sys.argv.(2) palette;
     generate_automato 0 palette colors neighborhood rule initial 0
 in main 4 1 (int_of_string Sys.argv.(3));;
-

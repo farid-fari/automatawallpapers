@@ -43,10 +43,9 @@ The other keys have no effect.
 
 The file `generate.out` is a binary compiled for linux and OSX using architecture `x64`.
 
-The `Makefile` defines a rule for that executable but requires `ocamlopt` with `Flambda` optimizations to be installed and switched on in `opam`.
-You can do the same without `Flambda` with the following command (or similar):
-
-    ocamlopt -o generate.out graphics.cmxa generate.ml
+The `Makefile` defines a rule for that executable but requires `ocamlopt` with
+`Flambda` optimizations to be installed, as well as the `graphics` and
+`ocamlfind` packages.
+You can install those using `opam` inside a switch.
 
 You can also use `ocamlc` by replacing `graphics.cmxa` by `graphics.cma`.
-

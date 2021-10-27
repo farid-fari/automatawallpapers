@@ -1,5 +1,5 @@
 all: generate.out
 
 generate.out: generate.ml
-	ocamlopt -O3 -o $@ graphics.cmxa $<
+	ocamlfind ocamlopt -O3 -o $@ -package graphics -linkpkg $<
 

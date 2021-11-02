@@ -29,6 +29,12 @@ let palettes = [| (function
 | 3 -> rgb 162 186 164
 | _ -> rgb 0 0 0);
 (function
+| 0 -> rgb 252 252 252
+| 1 -> rgb 6 214 160
+| 2 -> rgb 254 239 221
+| 3 -> rgb 80 178 192
+| _ -> rgb 0 0 0);
+(function
 | 0 -> rgb 198 249 31
 | 1 -> rgb 20 17 21
 | 2 -> rgb 76 43 54
